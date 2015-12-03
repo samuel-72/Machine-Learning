@@ -1,0 +1,100 @@
+import numpy as np
+import math
+
+A = np.loadtxt("D:/PCA_Matrix.csv", delimiter=",")
+#print A.shape
+#print A
+#print type(A)
+
+
+L=np.mat(A.T) * np.mat(A)
+#print "This is the L matrix : \n" + str(L)
+
+eig_val_cov, eig_vec_cov = np.linalg.eig(L)
+
+#print "\n\nThese are the eigen values for L : \n" + str(eig_val_cov)
+
+#print "\n\nThese are the eigen vectors for L : \n" + str(eig_vec_cov)
+
+print "No of Eigenvalues : " + str(len(eig_val_cov))
+print "No of Eigenvectors : " + str(len(eig_vec_cov))
+
+u = np.array( np.mat(A) * np.mat(eig_vec_cov) )
+
+#print "\n\nThis is the Eigenvector(u) for Covariance matrix C : \n" + str(u)
+
+lengthMu = [ 0*j for j in range(0,20) ]
+
+for j in range (0,20):
+    for i in range(0,20606):
+        lengthMu[j] += u[i][j] * u[i][j]
+        #print u[i][j]
+        
+    lengthMu[j] = math.sqrt(lengthMu[j])
+
+print "\n\nThis is the length of each column in the u vector : %s\n" % str(lengthMu)
+
+mu = [ [ 0 for j in range(0,20) ] for i in range(0,20606) ]
+
+for j in range (0,20):
+    for i in range(0,20606):
+        mu[i][j] = u[i][j]/lengthMu[j]
+        
+
+#print "\n\nThis is the normalized Eigenvector(Mu) of C is: \n%s\n" % str(np.array(mu))
+
+eig_pairs = [(np.abs(eig_val_cov[i]), eig_vec_cov[:,i])
+             for i in range(len(eig_val_cov))]
+
+# Sort the (eigenvalue, eigenvector) tuples from high to low
+eig_pairs.sort()
+eig_pairs.reverse()
+
+# Visually confirm that the list is correctly sorted by decreasing eigenvalues
+for i in eig_pairs:
+    print(i[0])
+
+mu2 = np.array(mu)
+
+# This is the scoring matrix delta
+Delta = [ [ 0 for j in range(0,20) ] for i in range(0,15) ]
+
+for i in range(0,20):
+    for j in range(0,15):
+        Delta[j][i] = np.dot(A[:,i].T, mu2[:,j].T)
+        
+
+#print np.array(Delta)
+
+#Delta = np.delete(Delta,3,0)
+
+#print "\n\nThis is the scoring matrix (Delta) : \n" + str(Delta)
+#print np.array(Delta).shape
+
+# X is the vector that needs to be scored
+#X = np.array([2, 3, 4, 4, 3, 2])
+X = np.loadtxt("D:/PCA_Test_1.csv", delimiter=",")
+#print X.shape
+# This is the weight matrix W
+W = [ 0 for i in range(0,15) ]
+
+for j in range(0,15):
+    W[j] = np.dot(X.T, mu2[:,j].T)
+        
+print "\n\nThis is the weight matrix for test vector X : \n" + str(W)
+
+distance = []
+d = 0.0
+
+Delta = np.array(Delta)
+
+for rows in range(0,15):
+    i =0 
+    for item in Delta[:,rows]:
+        d += math.pow( (W[i] - item),2)
+        i += 1
+    print "\nDistance between W and omega" + str(rows+1) + " : " + str(math.sqrt(d))
+    distance.append(math.sqrt(d))
+
+print "\nMinimum distance amongst the above is : " + str(min(distance))
+
